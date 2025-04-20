@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+
 import { verifyAccessToken } from '../utils/validateToken';
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
@@ -13,6 +14,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     req.user = decoded; // Attach user info to the request
     next();
   } catch (error) {
+    console.log(error);
     return res.status(403).json({ message: 'Invalid or expired access token' });
   }
 };

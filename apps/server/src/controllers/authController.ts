@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+
 import { generateAccessToken, generateRefreshToken } from '../utils/generateToken';
 import { verifyRefreshToken } from '../utils/validateToken';
 
@@ -58,6 +59,7 @@ export const refreshToken = (req: Request, res: Response): void => {
 
     res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (error) {
+    console.log(error);
     res.status(401).json({ message: 'Invalid refresh token' });
   }
 };

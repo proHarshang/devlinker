@@ -1,9 +1,13 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-export const verifyAccessToken = (token: string): any => {
-    return jwt.verify(token, process.env.JWT_SECRET as string);
-  };
-  
-  export const verifyRefreshToken = (token: string): any => {
-    return jwt.verify(token, process.env.JWT_SECRET as string);
-  };
+interface TokenPayload extends JwtPayload {
+  userId: string;
+}
+
+export const verifyAccessToken = (token: string): TokenPayload => {
+  return jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload;
+};
+
+export const verifyRefreshToken = (token: string): TokenPayload => {
+  return jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload;
+};
