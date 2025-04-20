@@ -1,46 +1,36 @@
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email(),
+  password: z.string().min(6),
 });
 
-type LoginSchema = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
-  const form = useForm<LoginSchema>({
+const Login = () => {
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
-  const onSubmit = (data: LoginSchema) => {
-    console.log(data);
+  const onSubmit = (values: LoginFormData) => {
+    console.log("Login form submitted:", values);
+    // TODO: Call backend API
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 w-full max-w-md p-6 border rounded-xl shadow-md"
-        >
-          <h2 className="text-2xl font-semibold text-center">Login</h2>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md bg-white p-6 rounded-xl shadow">
+          <h1 className="text-2xl font-semibold text-center">Login</h1>
 
           <FormField
             control={form.control}
@@ -48,9 +38,7 @@ export default function Login() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="you@example.com" {...field} />
-                </FormControl>
+                <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -62,19 +50,17 @@ export default function Login() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
+                <FormControl><Input type="password" placeholder="********" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit" className="w-full">
-            Login
-          </Button>
+          <Button type="submit" className="w-full">Login</Button>
         </form>
       </Form>
     </div>
   );
-}
+};
+
+export default Login;
