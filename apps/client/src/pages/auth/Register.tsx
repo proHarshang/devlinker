@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-
+import axios from "axios"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -36,9 +36,18 @@ const Register = () => {
     },
   });
 
-  const onSubmit = (values: RegisterFormData) => {
+  const onSubmit = async (values: RegisterFormData) => {
     console.log("Register form submitted:", values)
-    // TODO: connect to backend
+    try {
+      const {confirmPassword, ...payload } = values
+      console.log(JSON.stringify(payload))
+
+      const response = await axios.post("/api/auth/register", payload)
+      console.log("✅ Registered successfully", response.data)
+
+    } catch (error: any) {
+      console.error("❌ Registration failed", error.response?.data || error.message)
+    }
   }
 
   return (

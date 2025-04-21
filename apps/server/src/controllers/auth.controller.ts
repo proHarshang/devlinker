@@ -1,27 +1,42 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import { z } from "zod"
+import { RequestHandler } from 'express';
 
+import { prisma } from '../lib/prisma'
 import { generateAccessToken, generateRefreshToken } from '../utils/generateToken';
 import { verifyRefreshToken } from '../utils/validateToken';
 
+
+const RegisterSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+  password: z.string().min(6),
+})
+
 const users: any[] = []; // Temporary in-memory user store
 
-export const registerUser = async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+export const registerUser: RequestHandler = async (req, res) => {
+  try {
+    const { name, email, password } = RegisterSchema.parse(req.body)
 
-  // Check if user already exists
-  const existingUser = users.find((user) => user.username === username);
-  if (existingUser) {
-    res.status(400).json({ message: 'User already exists' });
-    return;
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+    if (existingUser) {
+      res.status(400).json({ message: "User already exists" })
+      return
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const user = await prisma.user.create({
+      data: { name, email, password: hashedPassword },
+    })
+
+    res.status(201).json({ message: "User created", userId: user.id })
+  } catch (err) {
+    console.error(err)
+    res.status(400).json({ message: "Something went wrong", error: err })
   }
-
-  // Hash password before storing
-  const hashedPassword = await bcrypt.hash(password, 10);
-  users.push({ username, password: hashedPassword });
-
-  res.status(201).json({ message: 'User registered successfully' });
-};
+}
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
