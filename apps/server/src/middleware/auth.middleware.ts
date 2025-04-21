@@ -2,8 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 
 import { verifyAccessToken } from '../utils/validateToken';
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Access token missing" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
@@ -11,7 +18,8 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
   try {
     const decoded = verifyAccessToken(token);
-    req.user = decoded; // Attach user info to the request
+    console.log("decoded" + decoded)
+    req.userId = decoded.userId;
     next();
   } catch (error) {
     console.log(error);

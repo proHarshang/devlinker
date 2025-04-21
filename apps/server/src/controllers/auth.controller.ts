@@ -1,4 +1,3 @@
-import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from "zod"
 import { RequestHandler } from 'express';
@@ -13,8 +12,6 @@ const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
 })
-
-const users: any[] = []; // Temporary in-memory user store
 
 export const registerUser: RequestHandler = async (req, res) => {
   try {
@@ -38,43 +35,62 @@ export const registerUser: RequestHandler = async (req, res) => {
   }
 }
 
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+export const loginUser: RequestHandler = async (req, res) => {
+  const { email, password } = req.body;
 
-  const user = users.find((user) => user.username === username);
-  if (!user) {
-    res.status(400).json({ message: 'Invalid credentials' });
-    return;
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      res.status(401).json({ message: "Invalid credentials" });
+      return;
+    }
+
+    const accessToken = generateAccessToken(user.email);
+    const refreshToken = generateRefreshToken(user.email);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Something went wrong" });
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    res.status(400).json({ message: 'Invalid credentials' });
-    return;
-  }
-
-  const accessToken = generateAccessToken(user.username);
-  const refreshToken = generateRefreshToken(user.username);
-
-  res.status(200).json({ accessToken, refreshToken });
 };
 
-export const refreshToken = (req: Request, res: Response): void => {
-  const { refreshToken } = req.body;
+export const handleRefresh:RequestHandler = async (req, res) => {
+  const token = req.cookies.refreshToken;
 
-  if (!refreshToken) {
-    res.status(401).json({ message: 'Refresh token is required' });
+  if (!token) {
+    res.status(401).json({ message: "Refresh token missing" });
     return;
   }
 
   try {
-    const decoded = verifyRefreshToken(refreshToken);
-    const newAccessToken = generateAccessToken(decoded.userId);
-    const newRefreshToken = generateRefreshToken(decoded.userId);
+    const decoded = verifyRefreshToken(token);
+    const newAccessToken = generateAccessToken(decoded.userId);    
 
-    res.status(200).json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
-  } catch (error) {
-    console.log(error);
-    res.status(401).json({ message: 'Invalid refresh token' });
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (err) {
+    console.error("Refreh token error:", err);
+    res.status(403).json({ message: "Invalid refresh token" });
   }
 };
