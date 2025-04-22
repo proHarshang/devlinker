@@ -1,9 +1,23 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
+import { useState } from 'react';
+
+import { useAppDispatch } from '@/store';
+import api from '@/lib/api';
+import { login } from '@/store/slices/auth.slice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -13,24 +27,43 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
+
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
-  const onSubmit = (values: LoginFormData) => {
-    console.log("Login form submitted:", values);
-    // TODO: Call backend API
+  const onSubmit = async (values: LoginFormData) => {
+    try {
+      setError('');
+      const response = await api.post('/auth/login', values);
+      const { accessToken, user } = response.data;
+
+      localStorage.setItem('accessToken', accessToken);
+      dispatch(login(user));
+      navigate('/');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      setError(error.response?.data?.message || 'Login failed. Please try again.');
+    }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full max-w-md bg-white p-6 rounded-xl shadow">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-6 w-full max-w-md bg-white p-6 rounded-xl shadow"
+        >
           <h1 className="text-2xl font-semibold text-center">Login</h1>
+
+          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
 
           <FormField
             control={form.control}
@@ -38,7 +71,9 @@ const Login = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
-                <FormControl><Input type="email" placeholder="you@example.com" {...field} /></FormControl>
+                <FormControl>
+                  <Input type="email" placeholder="you@example.com" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -50,13 +85,17 @@ const Login = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <FormControl><Input type="password" placeholder="********" {...field} /></FormControl>
+                <FormControl>
+                  <Input type="password" placeholder="********" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <Button type="submit" className="w-full">Login</Button>
+          <Button type="submit" className="w-full">
+            Login
+          </Button>
         </form>
       </Form>
     </div>

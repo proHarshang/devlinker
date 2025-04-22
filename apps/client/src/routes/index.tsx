@@ -1,15 +1,15 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Login from "@/pages/auth/Login";
-import Register from "@/pages/auth/Register";
-import Dashboard from "@/pages/dashboard/Dashboard";
-import PrivateRoute from "@/components/PrivateRoute";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import AuthLayout from "@/layouts/AuthLayout";
-import AppLayout from "@/layouts/AppLayout";
+import Login from '@/pages/auth/Login';
+import Register from '@/pages/auth/Register';
+import Dashboard from '@/pages/dashboard/Dashboard';
+import PrivateRoute from '@/components/PrivateRoute';
+import AuthLayout from '@/layouts/AuthLayout';
+import AppLayout from '@/layouts/AppLayout';
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: (
       <PrivateRoute>
         <AppLayout />
@@ -27,11 +27,11 @@ const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       {
-        path: "/login",
+        path: '/login',
         element: <Login />,
       },
       {
-        path: "/register",
+        path: '/register',
         element: <Register />,
       },
     ],

@@ -1,7 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from "axios"
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { AxiosError } from 'axios';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import api from '@/lib/api';
 
 const registerSchema = z
   .object({
@@ -27,6 +31,9 @@ const registerSchema = z
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
+
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -37,18 +44,16 @@ const Register = () => {
   });
 
   const onSubmit = async (values: RegisterFormData) => {
-    console.log("Register form submitted:", values)
     try {
-      const {confirmPassword, ...payload } = values
-      console.log(JSON.stringify(payload))
-
-      const response = await axios.post("/api/auth/register", payload)
-      console.log("✅ Registered successfully", response.data)
-
-    } catch (error: any) {
-      console.error("❌ Registration failed", error.response?.data || error.message)
+      setError('');
+      const { email, password } = values;
+      await api.post('/auth/register', { email, password });
+      navigate('/login');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      setError(error.response?.data?.message || 'Registration failed. Please try again.');
     }
-  }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -58,6 +63,8 @@ const Register = () => {
           className="space-y-6 w-full max-w-md bg-white p-6 rounded-xl shadow"
         >
           <h1 className="text-2xl font-semibold text-center">Register</h1>
+
+          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
 
           <FormField
             control={form.control}

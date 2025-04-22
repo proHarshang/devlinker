@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
-    console.log("get user" + req.userId);
+    console.log('get user' + req.userId);
 
     const user = await prisma.user.findUnique({
       where: { id: req.userId },

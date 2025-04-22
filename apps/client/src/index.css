@@ -1,6 +1,6 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
-@import "tailwindcss";
+@import 'tailwindcss/preflight';
+@import 'tailwindcss/utilities';
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -52,7 +52,7 @@
     border-color: var(--border);
     outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
   }
-  
+
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -164,4 +164,4 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-} 
+}
